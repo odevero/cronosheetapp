@@ -1,0 +1,300 @@
+@if (store.appSurface() === 'landing') {
+  <app-landing-page />
+} @else if (store.authStage() === 'loading') {
+  <div class="min-h-screen bg-[#FFFFFF] flex items-center justify-center p-6">
+    <div class="flex items-center gap-3 text-sm text-[#5F6368]">
+      <mat-icon class="animate-spin text-[#1A73E8]">progress_activity</mat-icon>
+      <span>{{ i18n.t('common.loading') }}</span>
+    </div>
+  </div>
+} @else if (store.authStage() !== 'authenticated') {
+  <app-auth-gate />
+} @else if (store.workspaceMode() === 'showcase') {
+  <app-showcase-shell />
+} @else {
+  <div class="min-h-screen bg-[#FFFFFF] text-[#202124] flex">
+    <!-- Mobile Drawer Backdrop -->
+    @if (mobileMenuOpen()) {
+      <div
+        class="fixed inset-0 z-40 bg-[#202124]/40 lg:hidden"
+        (click)="mobileMenuOpen.set(false)"
+        aria-hidden="true"
+      ></div>
+    }
+
+    <!-- Left Workspace Sidebar -->
+    <aside
+      [class]="
+        mobileMenuOpen()
+          ? 'fixed inset-y-0 left-0 z-50 w-[240px] bg-[#F8F9FA] border-r border-[#DADCE0] flex flex-col transition-transform duration-200 translate-x-0'
+          : 'fixed inset-y-0 left-0 z-50 w-[240px] bg-[#F8F9FA] border-r border-[#DADCE0] flex flex-col transition-transform duration-200 -translate-x-full lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 shrink-0'
+      "
+      aria-label="Navigazione schede"
+    >
+      <!-- Sidebar Brand Header (Desktop: icon -> Landing; Mobile: plain title + close button) -->
+      <div class="h-14 px-5 border-b border-[#DADCE0] flex items-center justify-between gap-3 shrink-0 bg-white">
+        <div class="hidden lg:flex items-center gap-2.5 whitespace-nowrap">
+          <button
+            type="button"
+            (click)="openLandingFromSidebar()"
+            title="Torna alla Landing Page"
+            aria-label="Torna alla Landing Page"
+            class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 cursor-pointer hover:opacity-85 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A73E8]"
+          >
+            <img
+              src="/icons/pwa-192x192.png"
+              alt=""
+              referrerpolicy="no-referrer"
+              class="w-7 h-7 rounded-lg block"
+            />
+          </button>
+          <span class="font-display font-bold text-base tracking-tight text-[#202124]">CronoSheet</span>
+        </div>
+
+        <span class="lg:hidden font-display font-bold text-base tracking-tight text-[#202124] whitespace-nowrap">
+          {{ i18n.t('sidebar.menu') }}
+        </span>
+
+        <button
+          type="button"
+          (click)="mobileMenuOpen.set(false)"
+          [attr.aria-label]="i18n.t('common.close')"
+          class="lg:hidden p-1.5 rounded-md text-[#5F6368] hover:bg-[#F1F3F4] cursor-pointer"
+        >
+          <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Sheet Tabs Navigation -->
+      <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+        <button
+          type="button"
+          (click)="openShowcase()"
+          class="w-full mb-3 flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white border border-[#DADCE0] hover:border-[#1A73E8] text-[#202124] hover:text-[#1A73E8] text-sm font-semibold transition-colors whitespace-nowrap cursor-pointer"
+        >
+          <mat-icon class="!text-[19px] !w-[19px] !h-[19px] text-[#1A73E8] shrink-0">visibility</mat-icon>
+          <span class="truncate">{{ i18n.t('sidebar.backToView') }}</span>
+        </button>
+
+        <p class="px-3 pt-1 pb-2 text-xs font-medium text-[#5F6368]">{{ i18n.t('sidebar.sectionBackend') }}</p>
+        @for (tab of navTabs; track tab.id) {
+          <button
+            type="button"
+            (click)="selectTab(tab.id)"
+            [attr.aria-current]="store.activeTab() === tab.id ? 'page' : null"
+            [class]="
+              store.activeTab() === tab.id
+                ? 'w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg bg-[#E8F0FE] text-[#174EA6] text-sm font-semibold transition-colors whitespace-nowrap cursor-pointer'
+                : 'w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-lg text-[#3C4043] hover:bg-[#E8EAED]/70 text-sm font-medium transition-colors whitespace-nowrap cursor-pointer'
+            "
+          >
+            <span class="flex items-center gap-2.5 min-w-0">
+              <mat-icon
+                class="!text-[19px] !w-[19px] !h-[19px] shrink-0"
+                [style.color]="store.activeTab() === tab.id ? '#1A73E8' : tab.accentHex"
+              >
+                {{ tab.icon }}
+              </mat-icon>
+              <span class="truncate">{{ i18n.t(tab.labelKey) }}</span>
+            </span>
+
+            @if (tabBadgeCount(tab.id) !== null) {
+              <span class="font-mono text-xs tabular-nums opacity-80">
+                {{ tabBadgeCount(tab.id) }}
+              </span>
+            }
+          </button>
+        }
+      </nav>
+
+      <!-- Mobile-only Landing link anchored just above the account divider -->
+      <div class="lg:hidden px-3 py-2 border-t border-[#E8EAED] bg-[#F8F9FA] shrink-0">
+        <button
+          type="button"
+          (click)="openLandingFromSidebar()"
+          class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[#3C4043] hover:bg-[#E8EAED]/70 hover:text-[#1A73E8] text-sm font-medium transition-colors whitespace-nowrap cursor-pointer"
+        >
+          <img
+            src="/icons/pwa-192x192.png"
+            alt=""
+            referrerpolicy="no-referrer"
+            class="w-5 h-5 rounded-md shrink-0"
+          />
+          <span class="truncate">{{ i18n.t('sidebar.backLanding') }}</span>
+        </button>
+      </div>
+
+      <!-- Sidebar Footer: Language, Account & Logout -->
+      <div class="p-3 border-t border-[#DADCE0] bg-white space-y-2.5 shrink-0">
+        <div class="px-1 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-xs font-semibold text-[#202124] truncate">
+              {{ store.sessionUser()?.displayName }}
+            </p>
+            <p class="text-[11px] text-[#5F6368] truncate">
+              {{ store.sessionUser()?.mode === 'firebase' ? i18n.t('sidebar.modeCloud') : i18n.t('sidebar.modeDemo') }}
+              @if (store.mfaConfig()?.totpEnabled) {
+                · 2FA
+              }
+            </p>
+          </div>
+          <app-language-switcher />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <button
+            type="button"
+            (click)="openFeedback()"
+            class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#DADCE0] text-xs font-medium text-[#3C4043] hover:bg-[#F8F9FA] hover:text-[#1A73E8] transition-colors cursor-pointer"
+          >
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">feedback</mat-icon>
+            <span>{{ i18n.t('sidebar.feedback') }}</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="store.logout()"
+            class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#DADCE0] text-xs font-medium text-[#3C4043] hover:bg-[#F8F9FA] transition-colors cursor-pointer"
+          >
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">logout</mat-icon>
+            <span>{{ i18n.t('sidebar.logout') }}</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Viewport -->
+    <div class="flex-1 min-w-0 flex flex-col bg-[#FFFFFF]">
+      <!-- Top Bar -->
+      <header class="h-14 sticky top-0 z-30 bg-white border-b border-[#DADCE0] px-4 sm:px-6 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            (click)="mobileMenuOpen.set(true)"
+            aria-label="Apri menù schede"
+            class="lg:hidden p-1.5 rounded-lg text-[#5F6368] hover:bg-[#F1F3F4] cursor-pointer"
+          >
+            <mat-icon>menu</mat-icon>
+          </button>
+          <div class="flex items-center gap-2 text-sm min-w-0 whitespace-nowrap">
+            <span class="hidden sm:inline text-[#5F6368]">CronoSheet</span>
+            <span class="hidden sm:inline text-[#DADCE0]" aria-hidden="true">/</span>
+            <h1 class="font-display text-base font-bold text-[#202124] truncate">{{ activeTabTitle() }}</h1>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Sheets-style Undo / Redo controls (Ctrl+Z / Ctrl+Y) -->
+          <div class="flex items-center rounded-lg border border-[#DADCE0] bg-white overflow-hidden">
+            <button
+              type="button"
+              (click)="store.undo()"
+              [disabled]="!store.canUndo()"
+              [title]="store.undoLabel() ? 'Annulla: ' + store.undoLabel() + ' (Ctrl+Z)' : 'Annulla (Ctrl+Z)'"
+              aria-label="Annulla ultima modifica (Ctrl+Z)"
+              class="inline-flex items-center justify-center p-1.5 text-[#3C4043] hover:bg-[#F1F3F4] disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-default"
+            >
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">undo</mat-icon>
+            </button>
+            <span class="w-px h-4 bg-[#E8EAED]" aria-hidden="true"></span>
+            <button
+              type="button"
+              (click)="store.redo()"
+              [disabled]="!store.canRedo()"
+              [title]="store.redoLabel() ? 'Ripristina: ' + store.redoLabel() + ' (Ctrl+Y)' : 'Ripristina (Ctrl+Y)'"
+              aria-label="Ripristina modifica (Ctrl+Y)"
+              class="inline-flex items-center justify-center p-1.5 text-[#3C4043] hover:bg-[#F1F3F4] disabled:opacity-35 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-default"
+            >
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">redo</mat-icon>
+            </button>
+          </div>
+
+          <div class="hidden md:flex items-center gap-1.5 text-xs text-[#5F6368]">
+            <label for="ref-date-input" class="whitespace-nowrap">{{ i18n.t('topbar.refDate') }}</label>
+            <input
+              id="ref-date-input"
+              type="date"
+              [value]="store.referenceDateIso()"
+              (change)="onReferenceDateChange($event)"
+              class="px-2 py-1 rounded-md border border-[#DADCE0] font-mono text-xs text-[#202124] bg-[#F8F9FA] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+            />
+            @if (isCustomReferenceDate()) {
+              <button
+                type="button"
+                (click)="resetReferenceDateToToday()"
+                class="text-xs font-semibold text-[#1A73E8] hover:underline whitespace-nowrap cursor-pointer"
+              >
+                {{ i18n.t('common.today') }}
+              </button>
+            }
+          </div>
+
+          <button
+            type="button"
+            (click)="focusNewRow()"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1A73E8] hover:bg-[#1557B0] text-white text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">add</mat-icon>
+            <span>{{ i18n.t('topbar.newRow') }}</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Feedback Banner -->
+      @if (store.statusBanner(); as banner) {
+        <div
+          role="status"
+          [class]="
+            banner.tone === 'error'
+              ? 'px-4 sm:px-6 py-2.5 bg-[#FCE8E6] border-b border-[#F6AEA9] text-sm text-[#A50E0E] flex items-center justify-between gap-3'
+              : banner.tone === 'success'
+                ? 'px-4 sm:px-6 py-2.5 bg-[#E6F4EA] border-b border-[#A8DAB5] text-sm text-[#137333] flex items-center justify-between gap-3'
+                : 'px-4 sm:px-6 py-2.5 bg-[#E8F0FE] border-b border-[#AECBFA] text-sm text-[#174EA6] flex items-center justify-between gap-3'
+          "
+        >
+          <span>{{ banner.text }}</span>
+          <button
+            type="button"
+            (click)="store.clearBanner()"
+            aria-label="Chiudi avviso"
+            class="p-0.5 rounded hover:bg-black/5 cursor-pointer"
+          >
+            <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">close</mat-icon>
+          </button>
+        </div>
+      }
+
+      <!-- Main Active Sheet Content -->
+      <main class="flex-1 p-4 sm:p-6 w-full min-w-0">
+        @switch (store.activeTab()) {
+          @case ('data') {
+            <app-data-sheet />
+          }
+          @case ('recurrences') {
+            <app-recurrences-view />
+          }
+          @case ('memo') {
+            <app-tips-view />
+          }
+          @case ('filtersort') {
+            <app-filter-sort-view />
+          }
+          @case ('security') {
+            <app-security-view />
+          }
+          @case ('next') {
+            <app-next-roadmap-view />
+          }
+        }
+      </main>
+    </div>
+  </div>
+}
+
+<app-name-onboarding-modal />
+<app-feedback-modal />
+<app-social-share-modal />
+<app-import-goals-modal />
+<app-pwa-install-banner />
+
+

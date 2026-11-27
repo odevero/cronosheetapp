@@ -1,0 +1,324 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User workspace preferences and palette/threshold settings (owner-only).",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the profile owner."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Display name shown in the workspace."
+        },
+        "paletteStartRow": {
+          "type": "number",
+          "description": "1-based row index offset where Google 4-color alternation starts."
+        },
+        "anniversaryLookaheadDays": {
+          "type": "number",
+          "description": "Lookahead threshold in days for upcoming anniversaries."
+        },
+        "monthiversaryLookaheadDays": {
+          "type": "number",
+          "description": "Lookahead threshold in days for upcoming monthiversaries."
+        },
+        "weekiversaryLookaheadDays": {
+          "type": "number",
+          "description": "Lookahead threshold in days for upcoming weekiversaries."
+        },
+        "milestoneLookaheadDays": {
+          "type": "number",
+          "description": "Lookahead threshold in days for upcoming round-day milestones."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "displayName",
+        "paletteStartRow",
+        "anniversaryLookaheadDays",
+        "monthiversaryLookaheadDays",
+        "weekiversaryLookaheadDays",
+        "milestoneLookaheadDays",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserMfaSecurity": {
+      "title": "UserMfaSecurity",
+      "description": "Private 2FA/MFA TOTP configuration isolated in a subcollection strictly for the owner.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the owner."
+        },
+        "totpEnabled": {
+          "type": "boolean",
+          "description": "Whether TOTP 2FA verification is active."
+        },
+        "totpSecret": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128,
+          "description": "Base32 TOTP secret key."
+        },
+        "backupCodeHashes": {
+          "type": "array",
+          "description": "SHA-256 hashes of remaining single-use backup codes (max 10)."
+        },
+        "enrolledAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when 2FA was last enrolled."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["ownerId", "totpEnabled", "totpSecret", "backupCodeHashes", "updatedAt"]
+    },
+    "UserEncryptionSecurity": {
+      "title": "UserEncryptionSecurity",
+      "description": "Private opt-in AES-256-GCM data encryption settings and monthly mode-switch quota (max 2/month).",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the owner."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether AES-256-GCM encryption is active for user documents."
+        },
+        "algorithm": {
+          "type": "string",
+          "maxLength": 32,
+          "pattern": "^AES-256-GCM$",
+          "description": "Encryption cipher algorithm identifier."
+        },
+        "keyMaterial": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128,
+          "description": "Base64url-encoded 256-bit AES key material scoped strictly to the owner."
+        },
+        "switchesMonth": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 7,
+          "pattern": "^[0-9]{4}-[0-9]{2}$",
+          "description": "YYYY-MM calendar month for the monthly switch counter."
+        },
+        "switchesThisMonth": {
+          "type": "number",
+          "description": "Number of encryption mode switches performed in switchesMonth (0..2)."
+        },
+        "enabledAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last encryption mode toggle."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "enabled",
+        "algorithm",
+        "keyMaterial",
+        "switchesMonth",
+        "switchesThisMonth",
+        "updatedAt"
+      ]
+    },
+    "GoalEntry": {
+      "title": "GoalEntry",
+      "description": "A tracked activity or goal in the Data sheet (matches original Sheets model: title, startDate, endDate, notes).",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the owner."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "Activity text (plaintext up to 160 chars or AES-256-GCM enc:v1 envelope)."
+        },
+        "startDate": {
+          "type": "string",
+          "maxLength": 10,
+          "pattern": "^(|[0-9]{4}-[0-9]{2}-[0-9]{2})$",
+          "description": "Start ISO date YYYY-MM-DD or empty string."
+        },
+        "endDate": {
+          "type": "string",
+          "maxLength": 10,
+          "pattern": "^(|[0-9]{4}-[0-9]{2}-[0-9]{2})$",
+          "description": "Optional completion ISO date YYYY-MM-DD or empty string."
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 4096,
+          "description": "Optional user notes (plaintext or AES-256-GCM enc:v1 envelope)."
+        },
+        "sortOrder": {
+          "type": "number",
+          "description": "Row index preserving sheet order."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "startDate",
+        "endDate",
+        "notes",
+        "sortOrder",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MemoNote": {
+      "title": "MemoNote",
+      "description": "A next-step note on the Memo board linked to a tracked activity.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the owner."
+        },
+        "goalId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID of the linked GoalEntry."
+        },
+        "nextStep": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Immediate actionable next step (plaintext or AES-256-GCM enc:v1 envelope)."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Whether this memo step has been completed."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": ["ownerId", "goalId", "nextStep", "done", "createdAt", "updatedAt"]
+    },
+    "RoadmapItem": {
+      "title": "RoadmapItem",
+      "description": "Personal NEXT todo item from the sheet backlog.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the owner."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1536,
+          "description": "Roadmap item text (plaintext or AES-256-GCM enc:v1 envelope)."
+        },
+        "done": {
+          "type": "boolean",
+          "description": "Completion flag."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": ["ownerId", "text", "done", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Per-user workspace preferences and recurrence thresholds."
+    },
+    "/users/{userId}/security/{securityDocId}": {
+      "schema": { "$ref": "#/entities/UserMfaSecurity" },
+      "description": "Isolated per-user security documents: 'mfa' (UserMfaSecurity) and 'encryption' (UserEncryptionSecurity)."
+    },
+    "/users/{userId}/goals/{goalId}": {
+      "schema": { "$ref": "#/entities/GoalEntry" },
+      "description": "User's private day-counter activities (Data sheet)."
+    },
+    "/users/{userId}/tips/{tipId}": {
+      "schema": { "$ref": "#/entities/MemoNote" },
+      "description": "User's private Memo board next-step rows."
+    },
+    "/users/{userId}/roadmap/{itemId}": {
+      "schema": { "$ref": "#/entities/RoadmapItem" },
+      "description": "User's private NEXT backlog items."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "CronoSheet v1 — Contatore di Giorni \u0026 Ricorrenze",
+  "description": "Web app in Clean Architecture per tracciare obiettivi, calcolare anni/mesi/settimane/giorni esatti, rilevare ricorrenze automatiche e proteggere i dati con autenticazione e 2FA TOTP.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

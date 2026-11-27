@@ -1,0 +1,355 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Pillar 1 / Safety Net: Global default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Global Hardened Primitives
+    // -------------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidIsoDateOrEmpty(val) {
+      return val is string && val.size() <= 10 && val.matches('^(|[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // -------------------------------------------------------------------------
+    // Entity Validation Blueprints (Synced verbatim with firebase-blueprint.json)
+    // -------------------------------------------------------------------------
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'displayName', 'paletteStartRow',
+          'anniversaryLookaheadDays', 'monthiversaryLookaheadDays',
+          'weekiversaryLookaheadDays', 'milestoneLookaheadDays',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'displayName', 'paletteStartRow',
+          'anniversaryLookaheadDays', 'monthiversaryLookaheadDays',
+          'weekiversaryLookaheadDays', 'milestoneLookaheadDays',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.paletteStartRow is int && data.paletteStartRow >= 1 && data.paletteStartRow <= 10
+        && data.anniversaryLookaheadDays is int && data.anniversaryLookaheadDays >= 1 && data.anniversaryLookaheadDays <= 60
+        && data.monthiversaryLookaheadDays is int && data.monthiversaryLookaheadDays >= 1 && data.monthiversaryLookaheadDays <= 30
+        && data.weekiversaryLookaheadDays is int && data.weekiversaryLookaheadDays >= 1 && data.weekiversaryLookaheadDays <= 14
+        && data.milestoneLookaheadDays is int && data.milestoneLookaheadDays >= 1 && data.milestoneLookaheadDays <= 60
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidMfaSecurity(data, userId) {
+      return data.keys().hasAll(['ownerId', 'totpEnabled', 'totpSecret', 'backupCodeHashes', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'totpEnabled', 'totpSecret', 'backupCodeHashes', 'enrolledAt', 'updatedAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.totpEnabled is bool
+        && data.totpSecret is string && data.totpSecret.size() <= 128
+        && data.backupCodeHashes is list && data.backupCodeHashes.size() <= 10
+        && (data.backupCodeHashes.size() == 0 || (data.backupCodeHashes[0] is string && data.backupCodeHashes[0].size() <= 128))
+        && (!('enrolledAt' in data) || data.enrolledAt is timestamp)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidEncryptionSecurity(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'enabled', 'algorithm', 'keyMaterial',
+          'switchesMonth', 'switchesThisMonth', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'enabled', 'algorithm', 'keyMaterial',
+          'switchesMonth', 'switchesThisMonth', 'enabledAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.enabled is bool
+        && data.algorithm is string && data.algorithm == 'AES-256-GCM'
+        && data.keyMaterial is string && data.keyMaterial.size() <= 128
+        && data.switchesMonth is string && data.switchesMonth.size() == 7 && data.switchesMonth.matches('^[0-9]{4}-[0-9]{2}$')
+        && data.switchesThisMonth is int && data.switchesThisMonth >= 0 && data.switchesThisMonth <= 2
+        && (!('enabledAt' in data) || data.enabledAt is timestamp)
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidGoalEntry(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'title', 'startDate', 'endDate', 'notes', 'sortOrder', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'title', 'startDate', 'endDate', 'notes', 'sortOrder', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 1024
+        && isValidIsoDateOrEmpty(data.startDate)
+        && isValidIsoDateOrEmpty(data.endDate)
+        && data.notes is string && data.notes.size() <= 4096
+        && data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 1000000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidMemoNote(data, userId) {
+      return data.keys().hasAll(['ownerId', 'goalId', 'nextStep', 'done', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'goalId', 'nextStep', 'done', 'createdAt', 'updatedAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && isValidId(data.goalId)
+        && data.nextStep is string && data.nextStep.size() >= 1 && data.nextStep.size() <= 2048
+        && data.done is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidRoadmapItem(data, userId) {
+      return data.keys().hasAll(['ownerId', 'text', 'done', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'text', 'done', 'createdAt', 'updatedAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.text is string && data.text.size() >= 1 && data.text.size() <= 1536
+        && data.done is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // -------------------------------------------------------------------------
+    // /users/{userId} — Workspace Preferences (Owner-Only, No Public List)
+    // -------------------------------------------------------------------------
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName', 'paletteStartRow',
+            'anniversaryLookaheadDays', 'monthiversaryLookaheadDays',
+            'weekiversaryLookaheadDays', 'milestoneLookaheadDays', 'updatedAt'
+          ])
+        );
+
+      allow delete: if isVerifiedOwner(userId) && isValidId(userId);
+
+      // -----------------------------------------------------------------------
+      // /users/{userId}/security/{securityDocId} — Isolated 2FA & Encryption
+      // -----------------------------------------------------------------------
+      match /security/{securityDocId} {
+        allow get: if isOwner(userId)
+          && isValidId(userId)
+          && (securityDocId == 'mfa' || securityDocId == 'encryption');
+        allow list: if false;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && incoming().updatedAt == request.time
+          && (
+            (securityDocId == 'mfa' && isValidMfaSecurity(incoming(), userId)) ||
+            (securityDocId == 'encryption' && isValidEncryptionSecurity(incoming(), userId))
+          );
+
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().updatedAt == request.time
+          && (
+            (
+              securityDocId == 'mfa'
+              && isValidMfaSecurity(incoming(), userId)
+              && (
+                incoming().diff(existing()).affectedKeys().hasOnly([
+                  'totpEnabled', 'totpSecret', 'backupCodeHashes', 'enrolledAt', 'updatedAt'
+                ]) ||
+                incoming().diff(existing()).affectedKeys().hasOnly([
+                  'backupCodeHashes', 'updatedAt'
+                ])
+              )
+            ) ||
+            (
+              securityDocId == 'encryption'
+              && isValidEncryptionSecurity(incoming(), userId)
+              && incoming().diff(existing()).affectedKeys().hasOnly([
+                'enabled', 'algorithm', 'keyMaterial',
+                'switchesMonth', 'switchesThisMonth', 'enabledAt', 'updatedAt'
+              ])
+              && (
+                (incoming().switchesMonth == existing().switchesMonth && incoming().switchesThisMonth >= existing().switchesThisMonth) ||
+                (incoming().switchesMonth > existing().switchesMonth)
+              )
+            )
+          );
+
+        allow delete: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && (securityDocId == 'mfa' || securityDocId == 'encryption');
+      }
+
+      // -----------------------------------------------------------------------
+      // /users/{userId}/goals/{goalId} — Private Data Sheet Entries
+      // -----------------------------------------------------------------------
+      match /goals/{goalId} {
+        allow get: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(goalId)
+          && existing().ownerId == request.auth.uid;
+
+        allow list: if isOwner(userId)
+          && resource.data.ownerId == request.auth.uid;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(goalId)
+          && isValidGoalEntry(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(goalId)
+          && isValidGoalEntry(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'title', 'startDate', 'endDate', 'notes', 'sortOrder', 'updatedAt'
+            ])
+          );
+
+        allow delete: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(goalId)
+          && existing().ownerId == request.auth.uid;
+      }
+
+      // -----------------------------------------------------------------------
+      // /users/{userId}/tips/{tipId} — Private Memo Board
+      // -----------------------------------------------------------------------
+      match /tips/{tipId} {
+        allow get: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(tipId)
+          && existing().ownerId == request.auth.uid;
+
+        allow list: if isOwner(userId)
+          && resource.data.ownerId == request.auth.uid;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(tipId)
+          && isValidMemoNote(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId)/goals/$(incoming().goalId));
+
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(tipId)
+          && isValidMemoNote(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['goalId', 'nextStep', 'done', 'updatedAt'])
+              && exists(/databases/$(database)/documents/users/$(userId)/goals/$(incoming().goalId))
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['nextStep', 'done', 'updatedAt'])
+              && incoming().goalId == existing().goalId
+            )
+          );
+
+        allow delete: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(tipId)
+          && existing().ownerId == request.auth.uid;
+      }
+
+      // -----------------------------------------------------------------------
+      // /users/{userId}/roadmap/{itemId} — Personal NEXT Backlog
+      // -----------------------------------------------------------------------
+      match /roadmap/{itemId} {
+        allow get: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && existing().ownerId == request.auth.uid;
+
+        allow list: if isOwner(userId)
+          && resource.data.ownerId == request.auth.uid;
+
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && isValidRoadmapItem(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && isValidRoadmapItem(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['text', 'done', 'updatedAt'])
+          );
+
+        allow delete: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(itemId)
+          && existing().ownerId == request.auth.uid;
+      }
+    }
+  }
+}

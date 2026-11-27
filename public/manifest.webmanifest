@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "CronoSheet — Contatore di Giorni & Ricorrenze",
+  "short_name": "CronoSheet",
+  "description": "Contatore di giorni personale con calcolo esatto di anni, mesi, settimane e giorni, ricorrenze automatiche e spazio privato protetto.",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "/icons/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
