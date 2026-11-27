@@ -102,7 +102,7 @@
     },
     "UserEncryptionSecurity": {
       "title": "UserEncryptionSecurity",
-      "description": "Private opt-in AES-256-GCM data encryption settings and monthly mode-switch quota (max 2/month).",
+      "description": "Private always-on AES-256-GCM data encryption key scoped strictly to the owner.",
       "type": "object",
       "properties": {
         "ownerId": {
@@ -114,7 +114,7 @@
         },
         "enabled": {
           "type": "boolean",
-          "description": "Whether AES-256-GCM encryption is active for user documents."
+          "description": "Always true once provisioned: AES-256-GCM encryption is active by default."
         },
         "algorithm": {
           "type": "string",
@@ -124,25 +124,14 @@
         },
         "keyMaterial": {
           "type": "string",
-          "minLength": 0,
+          "minLength": 32,
           "maxLength": 128,
           "description": "Base64url-encoded 256-bit AES key material scoped strictly to the owner."
-        },
-        "switchesMonth": {
-          "type": "string",
-          "minLength": 7,
-          "maxLength": 7,
-          "pattern": "^[0-9]{4}-[0-9]{2}$",
-          "description": "YYYY-MM calendar month for the monthly switch counter."
-        },
-        "switchesThisMonth": {
-          "type": "number",
-          "description": "Number of encryption mode switches performed in switchesMonth (0..2)."
         },
         "enabledAt": {
           "type": "string",
           "format": "date-time",
-          "description": "Timestamp of last encryption mode toggle."
+          "description": "Timestamp when encryption was provisioned."
         },
         "updatedAt": {
           "type": "string",
@@ -155,8 +144,6 @@
         "enabled",
         "algorithm",
         "keyMaterial",
-        "switchesMonth",
-        "switchesThisMonth",
         "updatedAt"
       ]
     },

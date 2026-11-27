@@ -139,8 +139,6 @@ export interface UserEncryptionSecurity {
   readonly enabled: boolean;
   readonly algorithm: 'AES-256-GCM';
   readonly keyMaterial: string;
-  readonly switchesMonth: string; // YYYY-MM
-  readonly switchesThisMonth: number; // 0..2
   readonly enabledAtIso: string | null;
 }
 

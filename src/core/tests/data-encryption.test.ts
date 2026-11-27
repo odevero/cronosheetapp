@@ -5,16 +5,13 @@ import {
   encryptTextField,
   ENCRYPTION_ALGORITHM,
   generateAes256KeyMaterial,
-  getCurrentYearMonth,
-  getEncryptionSwitchQuota,
   importAes256Key,
   isEncryptedEnvelope,
-  MAX_ENCRYPTION_SWITCHES_PER_MONTH,
 } from '../domain/services/data-encryption';
-import { UserEncryptionSecurity } from '../domain/entities/models';
 
-describe('data-encryption (AES-256-GCM standard)', () => {
+describe('data-encryption (always-on AES-256-GCM standard)', () => {
   it('generates 256-bit key material and round-trips UTF-8 & emoji text with unique random IVs', async () => {
+    assert.equal(ENCRYPTION_ALGORITHM, 'AES-256-GCM');
     const keyMaterial = generateAes256KeyMaterial();
     assert.ok(keyMaterial.length >= 42 && keyMaterial.length <= 48);
 
@@ -53,44 +50,8 @@ describe('data-encryption (AES-256-GCM standard)', () => {
     assert.equal(await decryptTextField(twice, key), 'learn Spanish');
   });
 
-  it('enforces max 2 encryption mode switches per calendar month and resets on new month', () => {
-    assert.equal(MAX_ENCRYPTION_SWITCHES_PER_MONTH, 2);
-    assert.match(getCurrentYearMonth(new Date('2026-11-26T12:00:00Z')), /^2026-11$/);
-
-    // No config yet -> 0/2 used
-    const fresh = getEncryptionSwitchQuota(null, '2026-11');
-    assert.deepEqual(fresh, {
-      used: 0,
-      remaining: 2,
-      limit: 2,
-      month: '2026-11',
-      canSwitch: true,
-    });
-
-    const oneSwitch: UserEncryptionSecurity = {
-      ownerId: 'u1',
-      enabled: true,
-      algorithm: ENCRYPTION_ALGORITHM,
-      keyMaterial: 'abc',
-      switchesMonth: '2026-11',
-      switchesThisMonth: 1,
-      enabledAtIso: '2026-11-01T00:00:00Z',
-    };
-    const afterOne = getEncryptionSwitchQuota(oneSwitch, '2026-11');
-    assert.equal(afterOne.used, 1);
-    assert.equal(afterOne.remaining, 1);
-    assert.equal(afterOne.canSwitch, true);
-
-    const twoSwitches: UserEncryptionSecurity = { ...oneSwitch, switchesThisMonth: 2 };
-    const afterTwo = getEncryptionSwitchQuota(twoSwitches, '2026-11');
-    assert.equal(afterTwo.used, 2);
-    assert.equal(afterTwo.remaining, 0);
-    assert.equal(afterTwo.canSwitch, false);
-
-    // Next month resets quota cleanly to 0/2
-    const nextMonth = getEncryptionSwitchQuota(twoSwitches, '2026-12');
-    assert.equal(nextMonth.used, 0);
-    assert.equal(nextMonth.remaining, 2);
-    assert.equal(nextMonth.canSwitch, true);
+  it('rejects malformed or short AES-256 key material', async () => {
+    await assert.rejects(() => importAes256Key('AAAA'), /non valida/i);
+    await assert.rejects(() => importAes256Key('too-short'));
   });
 });

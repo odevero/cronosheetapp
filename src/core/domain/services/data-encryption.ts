@@ -6,15 +6,6 @@
 
 export const ENCRYPTION_PREFIX = 'enc:v1:';
 export const ENCRYPTION_ALGORITHM = 'AES-256-GCM';
-export const MAX_ENCRYPTION_SWITCHES_PER_MONTH = 2;
-
-export interface EncryptionQuotaStatus {
-  readonly month: string; // YYYY-MM
-  readonly used: number;
-  readonly limit: number;
-  readonly remaining: number;
-  readonly canSwitch: boolean;
-}
 
 function getSubtleCrypto(): SubtleCrypto {
   const subtle = globalThis.crypto?.subtle;
@@ -120,26 +111,4 @@ export async function decryptTextField(
   } catch {
     return storedValue;
   }
-}
-
-export function getCurrentYearMonth(now: Date = new Date()): string {
-  const y = String(now.getUTCFullYear()).padStart(4, '0');
-  const m = String(now.getUTCMonth() + 1).padStart(2, '0');
-  return `${y}-${m}`;
-}
-
-export function getEncryptionSwitchQuota(
-  config: { readonly switchesMonth: string; readonly switchesThisMonth: number } | null | undefined,
-  currentYearMonth: string = getCurrentYearMonth(),
-): EncryptionQuotaStatus {
-  const sameMonth = config?.switchesMonth === currentYearMonth;
-  const used = sameMonth ? Math.max(0, Math.trunc(config?.switchesThisMonth ?? 0)) : 0;
-  const remaining = Math.max(0, MAX_ENCRYPTION_SWITCHES_PER_MONTH - used);
-  return {
-    month: currentYearMonth,
-    used,
-    limit: MAX_ENCRYPTION_SWITCHES_PER_MONTH,
-    remaining,
-    canSwitch: remaining > 0,
-  };
 }

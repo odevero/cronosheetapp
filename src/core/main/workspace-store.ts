@@ -28,8 +28,6 @@ import { getTodayIsoLocal } from '../domain/services/calendar-duration';
 import {
   ENCRYPTION_ALGORITHM,
   generateAes256KeyMaterial,
-  getCurrentYearMonth,
-  getEncryptionSwitchQuota,
   importAes256Key,
 } from '../domain/services/data-encryption';
 import {
@@ -222,9 +220,7 @@ export class WorkspaceStore {
   readonly mfaConfig = signal<UserMfaSecurity | null>(null);
   readonly pendingMfaDraft = signal<MfaEnrollmentDraft | null>(null);
   readonly encryptionConfig = signal<UserEncryptionSecurity | null>(null);
-  readonly encryptionBusy = signal<boolean>(false);
   readonly encryptionEnabled = computed(() => Boolean(this.encryptionConfig()?.enabled));
-  readonly encryptionQuota = computed(() => getEncryptionSwitchQuota(this.encryptionConfig()));
 
   // Language for generated shareable messages (EN default so English infinitives stay intact; user can switch to IT or ES)
   readonly messageLanguage = signal<MessageLanguage>(this.loadInitialMessageLanguage());
@@ -495,17 +491,31 @@ export class WorkspaceStore {
       this.profileLoaded.set(true);
     }
 
-    // Load Standard AES-256-GCM encryption key BEFORE subscribing so all snapshots decrypt seamlessly
+    // Always-on Standard AES-256-GCM encryption:
+    // Automatically provision & activate a per-account 256-bit key BEFORE subscribing so all reads/writes are encrypted by default.
+    let migratePlaintextCollections: Set<'goals' | 'tips' | 'roadmap'> | null = null;
     if (this.encryptionRepo) {
       try {
-        const enc = await this.encryptionRepo.get(user.uid);
-        this.encryptionConfig.set(enc);
-        if (enc?.enabled && enc.keyMaterial) {
-          const key = await importAes256Key(enc.keyMaterial);
-          this.applyEncryptionKeyToRepos(key);
-        } else {
-          this.applyEncryptionKeyToRepos(null);
+        let enc = await this.encryptionRepo.get(user.uid);
+        if (!enc || !enc.enabled || !enc.keyMaterial || enc.keyMaterial.length < 32) {
+          const keyMaterial =
+            enc?.keyMaterial && enc.keyMaterial.length >= 32
+              ? enc.keyMaterial
+              : generateAes256KeyMaterial();
+          const provisioned: UserEncryptionSecurity = {
+            ownerId: user.uid,
+            enabled: true,
+            algorithm: ENCRYPTION_ALGORITHM,
+            keyMaterial,
+            enabledAtIso: new Date().toISOString(),
+          };
+          await this.encryptionRepo.save(user.uid, provisioned);
+          enc = provisioned;
+          migratePlaintextCollections = new Set(['goals', 'tips', 'roadmap']);
         }
+        this.encryptionConfig.set(enc);
+        const key = await importAes256Key(enc.keyMaterial);
+        this.applyEncryptionKeyToRepos(key);
       } catch {
         this.encryptionConfig.set(null);
         this.applyEncryptionKeyToRepos(null);
@@ -516,30 +526,48 @@ export class WorkspaceStore {
     }
 
     if (this.goalRepo) {
+      const goalRepo = this.goalRepo;
       this.unsubscribers.push(
-        this.goalRepo.subscribe(
+        goalRepo.subscribe(
           user.uid,
-          (items) => this.goals.set(items),
+          (items) => {
+            this.goals.set(items);
+            if (migratePlaintextCollections?.delete('goals') && items.length > 0) {
+              void this.migrateGoalsToEncrypted(user.uid, goalRepo, items);
+            }
+          },
           (err) => this.notify('error', this.friendlyError(err)),
         ),
       );
     }
 
     if (this.tipRepo) {
+      const tipRepo = this.tipRepo;
       this.unsubscribers.push(
-        this.tipRepo.subscribe(
+        tipRepo.subscribe(
           user.uid,
-          (items) => this.tips.set(items),
+          (items) => {
+            this.tips.set(items);
+            if (migratePlaintextCollections?.delete('tips') && items.length > 0) {
+              void this.migrateTipsToEncrypted(user.uid, tipRepo, items);
+            }
+          },
           (err) => this.notify('error', this.friendlyError(err)),
         ),
       );
     }
 
     if (this.roadmapRepo) {
+      const roadmapRepo = this.roadmapRepo;
       this.unsubscribers.push(
-        this.roadmapRepo.subscribe(
+        roadmapRepo.subscribe(
           user.uid,
-          (items) => this.roadmapItems.set(items),
+          (items) => {
+            this.roadmapItems.set(items);
+            if (migratePlaintextCollections?.delete('roadmap') && items.length > 0) {
+              void this.migrateRoadmapToEncrypted(user.uid, roadmapRepo, items);
+            }
+          },
           (err) => this.notify('error', this.friendlyError(err)),
         ),
       );
@@ -1554,7 +1582,7 @@ export class WorkspaceStore {
   }
 
   // ---------------------------------------------------------------------------
-  // Standard AES-256-GCM Data Encryption (Opt-in, max 2 mode switches / month)
+  // Always-On Standard AES-256-GCM Data Encryption
   // ---------------------------------------------------------------------------
   private applyEncryptionKeyToRepos(key: CryptoKey | null): void {
     this.goalRepo?.setEncryptionKey?.(key);
@@ -1562,89 +1590,45 @@ export class WorkspaceStore {
     this.roadmapRepo?.setEncryptionKey?.(key);
   }
 
-  async setDataEncryptionEnabled(
-    enable: boolean,
-  ): Promise<{ ok: boolean; error?: string }> {
-    const user = this.sessionUser();
-    if (!user || !this.encryptionRepo || !this.goalRepo || !this.tipRepo || !this.roadmapRepo) {
-      return { ok: false, error: 'Sessione non attiva.' };
-    }
-    if (this.encryptionBusy()) {
-      return { ok: false, error: 'Operazione già in corso.' };
-    }
-
-    const current = this.encryptionConfig();
-    if (Boolean(current?.enabled) === enable) {
-      return { ok: true };
-    }
-
-    const currentMonth = getCurrentYearMonth();
-    const quota = getEncryptionSwitchQuota(current, currentMonth);
-    if (!quota.canSwitch) {
-      return {
-        ok: false,
-        error: `Limite mensile raggiunto (${quota.limit}/${quota.limit} cambi in ${currentMonth}). Potrai cambiare di nuovo il mese prossimo.`,
-      };
-    }
-
-    this.encryptionBusy.set(true);
-    try {
-      // Snapshot current decrypted items before changing repository encryption state
-      const currentGoals = [...this.goals()];
-      const currentTips = [...this.tips()];
-      const currentRoadmap = [...this.roadmapItems()];
-
-      const keyMaterial =
-        current?.keyMaterial && current.keyMaterial.length >= 32
-          ? current.keyMaterial
-          : generateAes256KeyMaterial();
-
-      const targetKey = enable ? await importAes256Key(keyMaterial) : null;
-      const nextConfig: UserEncryptionSecurity = {
-        ownerId: user.uid,
-        enabled: enable,
-        algorithm: ENCRYPTION_ALGORITHM,
-        keyMaterial,
-        switchesMonth: currentMonth,
-        switchesThisMonth: quota.used + 1,
-        enabledAtIso: new Date().toISOString(),
-      };
-
-      // Persist config first, then switch repo key and rewrite existing documents
-      await this.encryptionRepo.save(user.uid, nextConfig);
-      this.applyEncryptionKeyToRepos(targetKey);
-
-      for (const goal of currentGoals) {
-        await this.goalRepo.update(user.uid, goal.id, {
-          title: goal.title,
-          notes: goal.notes,
-        });
+  private async migrateGoalsToEncrypted(
+    uid: string,
+    repo: GoalRepository,
+    items: readonly GoalEntry[],
+  ): Promise<void> {
+    for (const goal of items) {
+      try {
+        await repo.update(uid, goal.id, { title: goal.title, notes: goal.notes });
+      } catch {
+        // Non-fatal: individual record will still encrypt on next edit
       }
-      for (const tip of currentTips) {
-        await this.tipRepo.update(user.uid, tip.id, {
-          nextStep: tip.nextStep,
-        });
-      }
-      for (const item of currentRoadmap) {
-        await this.roadmapRepo.update(user.uid, item.id, {
-          text: item.text,
-        });
-      }
+    }
+  }
 
-      this.encryptionConfig.set(nextConfig);
-      this.notify(
-        'success',
-        enable
-          ? 'Crittografia AES-256-GCM attivata: tutti i tuoi dati sono ora cifrati nel database.'
-          : 'Crittografia disattivata: i tuoi dati sono stati ripristinati in chiaro nel database.',
-      );
-      return { ok: true };
-    } catch (err) {
-      const msg = this.friendlyError(err);
-      this.notify('error', msg);
-      return { ok: false, error: msg };
-    } finally {
-      this.encryptionBusy.set(false);
+  private async migrateTipsToEncrypted(
+    uid: string,
+    repo: TipRepository,
+    items: readonly TipNote[],
+  ): Promise<void> {
+    for (const tip of items) {
+      try {
+        await repo.update(uid, tip.id, { nextStep: tip.nextStep });
+      } catch {
+        // Non-fatal
+      }
+    }
+  }
+
+  private async migrateRoadmapToEncrypted(
+    uid: string,
+    repo: RoadmapRepository,
+    items: readonly RoadmapItem[],
+  ): Promise<void> {
+    for (const item of items) {
+      try {
+        await repo.update(uid, item.id, { text: item.text });
+      } catch {
+        // Non-fatal
+      }
     }
   }
 

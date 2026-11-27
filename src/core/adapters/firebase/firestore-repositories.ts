@@ -27,7 +27,6 @@ import {
   decryptTextField,
   ENCRYPTION_ALGORITHM,
   encryptTextField,
-  getCurrentYearMonth,
 } from '../../domain/services/data-encryption';
 import { DEFAULT_RECURRENCE_THRESHOLDS } from '../../domain/services/recurrence-scanner';
 import { sanitizeGoalInput } from '../../usecases/goal-usecases';
@@ -567,8 +566,6 @@ export class FirestoreEncryptionSecurityRepository implements EncryptionSecurity
         enabled: Boolean(d['enabled']),
         algorithm: ENCRYPTION_ALGORITHM,
         keyMaterial: String(d['keyMaterial'] ?? ''),
-        switchesMonth: String(d['switchesMonth'] ?? getCurrentYearMonth()),
-        switchesThisMonth: Number(d['switchesThisMonth'] ?? 0),
         enabledAtIso: d['enabledAt'] ? timestampToIso(d['enabledAt']) : null,
       };
     } catch (error) {
@@ -579,22 +576,16 @@ export class FirestoreEncryptionSecurityRepository implements EncryptionSecurity
   async save(ownerId: string, config: UserEncryptionSecurity): Promise<void> {
     const path = `users/${ownerId}/security/encryption`;
     try {
-      const existing = await getDoc(doc(this.db, path));
       const payload = {
         ownerId,
-        enabled: config.enabled,
+        enabled: true,
         algorithm: ENCRYPTION_ALGORITHM,
         keyMaterial: config.keyMaterial.slice(0, 128),
-        switchesMonth: config.switchesMonth.slice(0, 7),
-        switchesThisMonth: Math.max(0, Math.min(2, Math.trunc(config.switchesThisMonth))),
         enabledAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
-      if (existing.exists()) {
-        await updateDoc(doc(this.db, path), payload);
-      } else {
-        await setDoc(doc(this.db, path), payload);
-      }
+      // Use setDoc so any legacy switch-quota fields from earlier builds are cleanly stripped
+      await setDoc(doc(this.db, path), payload);
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
     }

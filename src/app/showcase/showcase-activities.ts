@@ -24,22 +24,22 @@ import { I18nService } from '../services/i18n';
   imports: [ReactiveFormsModule, MatIconModule],
   template: `
     <section class="w-full" aria-label="Elenco attività in visualizzazione">
-      <div class="w-full overflow-x-auto sheet-scroll">
+      <div class="w-full overflow-x-auto lg:overflow-x-clip sheet-scroll">
         <table
-          class="w-full border-collapse text-left font-sans text-[15px] text-[#202124]"
+          class="w-full border-separate border-spacing-0 text-left font-sans text-[15px] text-[#202124]"
           data-testid="showcase-activities-table"
         >
-          <thead>
-            <tr class="border-b border-[#E8EAED] text-[13px] font-medium text-[#5F6368]">
-              <th scope="col" class="py-3 pr-5 min-w-[220px] font-medium">{{ i18n.t('showcase.colActivity') }}</th>
-              <th scope="col" class="py-3 px-3 w-[112px] font-medium whitespace-nowrap">{{ i18n.t('showcase.colStart') }}</th>
-              <th scope="col" class="py-3 px-3 w-[112px] font-medium whitespace-nowrap">{{ i18n.t('showcase.colEnd') }}</th>
-              <th scope="col" class="py-3 px-3 w-[74px] text-right font-medium whitespace-nowrap">{{ i18n.t('showcase.colDays') }}</th>
-              <th scope="col" class="py-3 px-2 w-[42px] text-right font-medium" [title]="i18n.t('showcase.colYTitle')">{{ i18n.t('showcase.colY') }}</th>
-              <th scope="col" class="py-3 px-2 w-[42px] text-right font-medium" [title]="i18n.t('showcase.colMTitle')">{{ i18n.t('showcase.colM') }}</th>
-              <th scope="col" class="py-3 px-2 w-[42px] text-right font-medium" [title]="i18n.t('showcase.colWTitle')">{{ i18n.t('showcase.colW') }}</th>
-              <th scope="col" class="py-3 px-2 w-[42px] text-right font-medium" [title]="i18n.t('showcase.colDTitle')">{{ i18n.t('showcase.colD') }}</th>
-              <th scope="col" class="py-3 pl-6 min-w-[330px] font-medium">
+          <thead data-testid="showcase-activities-thead">
+            <tr class="text-[13px] font-medium text-[#5F6368]">
+              <th scope="col" class="py-3 pr-5 min-w-[180px] xl:min-w-[220px] font-medium bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]">{{ i18n.t('showcase.colActivity') }}</th>
+              <th scope="col" class="py-3 px-3 w-[100px] xl:w-[112px] font-medium whitespace-nowrap bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]">{{ i18n.t('showcase.colStart') }}</th>
+              <th scope="col" class="py-3 px-3 w-[100px] xl:w-[112px] font-medium whitespace-nowrap bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]">{{ i18n.t('showcase.colEnd') }}</th>
+              <th scope="col" class="py-3 px-3 w-[66px] xl:w-[74px] text-right font-medium whitespace-nowrap bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]">{{ i18n.t('showcase.colDays') }}</th>
+              <th scope="col" class="py-3 px-2 w-[36px] xl:w-[42px] text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]" [title]="i18n.t('showcase.colYTitle')">{{ i18n.t('showcase.colY') }}</th>
+              <th scope="col" class="py-3 px-2 w-[36px] xl:w-[42px] text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]" [title]="i18n.t('showcase.colMTitle')">{{ i18n.t('showcase.colM') }}</th>
+              <th scope="col" class="py-3 px-2 w-[36px] xl:w-[42px] text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]" [title]="i18n.t('showcase.colWTitle')">{{ i18n.t('showcase.colW') }}</th>
+              <th scope="col" class="py-3 px-2 w-[36px] xl:w-[42px] text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]" [title]="i18n.t('showcase.colDTitle')">{{ i18n.t('showcase.colD') }}</th>
+              <th scope="col" class="py-3 pl-5 xl:pl-6 min-w-[260px] xl:min-w-[330px] font-medium bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]">
                 <div class="flex items-center justify-between gap-3">
                   <span>
                     {{ i18n.t('showcase.colMessages') }}
@@ -69,53 +69,53 @@ import { I18nService } from '../services/i18n';
                   </div>
                 </div>
               </th>
-              <th scope="col" class="py-3 pl-3 w-11 text-right font-medium">
+              <th scope="col" class="py-3 pl-3 w-10 xl:w-11 text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-b border-[#E8EAED]">
                 <span class="sr-only">{{ i18n.t('showcase.colShare') }}</span>
               </th>
             </tr>
           </thead>
 
-          <tbody class="divide-y divide-[#F1F3F4]">
+          <tbody>
             @for (item of store.enrichedGoals(); track item.goal.id) {
               <tr class="hover:bg-[#FAFAFA] transition-colors">
                 <!-- Bold Google 4-Color Activity Title -->
-                <td class="py-4 pr-5 align-middle">
+                <td class="py-4 pr-5 align-middle border-b border-[#F1F3F4]">
                   <span [class]="'block text-[16px] font-bold leading-snug break-words ' + item.palette.inkClass">
                     {{ item.goal.title }}
                   </span>
                 </td>
 
                 <!-- Start Date -->
-                <td class="py-4 px-3 align-middle text-[15px] text-[#3C4043] tabular-nums whitespace-nowrap">
+                <td class="py-4 px-3 align-middle text-[15px] text-[#3C4043] tabular-nums whitespace-nowrap border-b border-[#F1F3F4]">
                   {{ formatDate(item.goal.startDate) }}
                 </td>
 
                 <!-- End Date -->
-                <td class="py-4 px-3 align-middle text-[15px] text-[#5F6368] tabular-nums whitespace-nowrap">
+                <td class="py-4 px-3 align-middle text-[15px] text-[#5F6368] tabular-nums whitespace-nowrap border-b border-[#F1F3F4]">
                   {{ item.goal.endDate ? formatDate(item.goal.endDate) : '—' }}
                 </td>
 
                 <!-- Primary Days Counter -->
-                <td class="py-4 px-3 text-right align-middle text-[16px] font-semibold text-[#202124] tabular-nums whitespace-nowrap">
+                <td class="py-4 px-3 text-right align-middle text-[16px] font-semibold text-[#202124] tabular-nums whitespace-nowrap border-b border-[#F1F3F4]">
                   {{ item.metrics.primaryDays !== null ? item.metrics.primaryDays : '—' }}
                 </td>
 
                 <!-- 4 Separate Pure Numeric A / M / S / G Columns (zero y/m/w/d letters) -->
-                <td class="py-4 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums">
+                <td class="py-4 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums border-b border-[#F1F3F4]">
                   {{ item.metrics.breakdown !== null ? item.metrics.breakdown.years : '—' }}
                 </td>
-                <td class="py-4 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums">
+                <td class="py-4 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums border-b border-[#F1F3F4]">
                   {{ item.metrics.breakdown !== null ? item.metrics.breakdown.months : '—' }}
                 </td>
-                <td class="py-4 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums">
+                <td class="py-4 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums border-b border-[#F1F3F4]">
                   {{ item.metrics.breakdown !== null ? item.metrics.breakdown.weeks : '—' }}
                 </td>
-                <td class="py-4 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums">
+                <td class="py-4 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums border-b border-[#F1F3F4]">
                   {{ item.metrics.breakdown !== null ? item.metrics.breakdown.days : '—' }}
                 </td>
 
                 <!-- Dual Copyable Share Messages (click directly on either line to copy) -->
-                <td class="py-3.5 pl-6 align-middle">
+                <td class="py-3.5 pl-5 xl:pl-6 align-middle border-b border-[#F1F3F4]">
                   <div class="flex flex-col gap-1">
                     <button
                       type="button"
@@ -170,7 +170,7 @@ import { I18nService } from '../services/i18n';
                 </td>
 
                 <!-- Social Card Share Trigger (Instagram Post / Stories) -->
-                <td class="py-3.5 pl-3 text-right align-middle">
+                <td class="py-3.5 pl-3 text-right align-middle border-b border-[#F1F3F4]">
                   <button
                     type="button"
                     (click)="store.openSocialShare(item)"
@@ -200,7 +200,7 @@ import { I18nService } from '../services/i18n';
         class="fixed bottom-0 inset-x-0 z-20 bg-white border-t border-[#E8EAED] transition-colors"
         [class.bg-[#FAFAFA]]="composerActive() || hasDraftTitle()"
       >
-        <div class="w-full px-6 sm:px-10 lg:px-14 py-3 flex flex-wrap sm:flex-nowrap items-center gap-x-6 gap-y-2">
+        <div class="w-full px-6 sm:px-10 lg:px-10 xl:px-14 py-3 flex flex-wrap sm:flex-nowrap items-center gap-x-6 gap-y-2">
           <div class="flex-1 min-w-[220px] max-w-[420px]">
             <div class="grid w-full">
               <div

@@ -1,0 +1,49 @@
+name: CronoSheet CI
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - production
+  pull_request:
+    branches:
+      - main
+      - staging
+      - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Lint Angular & TypeScript
+        run: npm run lint
+
+      - name: Lint Firestore Security Rules
+        run: npx eslint firestore.rules
+
+      - name: Run Unit & Security Rules Tests
+        run: npx --yes tsx --test firestore.rules.test.ts src/core/tests/*.test.ts
+
+      - name: Production Build (Browser + SSR)
+        run: npm run build

@@ -63,43 +63,43 @@ interface ShowcaseCompartment {
               {{ section.emptyText }}
             </p>
           } @else {
-            <div class="w-full overflow-x-auto sheet-scroll">
-              <table class="w-full border-collapse text-left font-sans text-[15px] text-[#202124]">
+            <div class="w-full overflow-x-auto lg:overflow-x-clip sheet-scroll">
+              <table class="w-full border-separate border-spacing-0 text-left font-sans text-[15px] text-[#202124]">
                 <thead>
-                  <tr class="border-t border-b border-[#E8EAED] text-[13px] font-medium text-[#5F6368]">
-                    <th scope="col" class="py-2.5 pr-5 min-w-[220px] w-[24%] font-medium">{{ i18n.t('showcase.colActivity') }}</th>
-                    <th scope="col" class="py-2.5 px-3 w-[112px] font-medium whitespace-nowrap">{{ i18n.t('showcase.recRefDate') }}</th>
-                    <th scope="col" class="py-2.5 px-3 w-[124px] font-medium whitespace-nowrap">{{ i18n.t('showcase.recWhen') }}</th>
-                    <th scope="col" class="py-2.5 px-2 w-[42px] text-right font-medium" [title]="i18n.t('showcase.colYTitle')">{{ i18n.t('showcase.colY') }}</th>
-                    <th scope="col" class="py-2.5 px-2 w-[42px] text-right font-medium" [title]="i18n.t('showcase.colMTitle')">{{ i18n.t('showcase.colM') }}</th>
-                    <th scope="col" class="py-2.5 px-2 w-[42px] text-right font-medium" [title]="i18n.t('showcase.colWTitle')">{{ i18n.t('showcase.colW') }}</th>
-                    <th scope="col" class="py-2.5 px-2 w-[42px] text-right font-medium" [title]="i18n.t('showcase.colDTitle')">{{ i18n.t('showcase.colD') }}</th>
-                    <th scope="col" class="py-2.5 pl-6 min-w-[330px] font-medium">
+                  <tr class="text-[13px] font-medium text-[#5F6368]">
+                    <th scope="col" class="py-2.5 pr-5 min-w-[180px] xl:min-w-[220px] w-[24%] font-medium bg-white lg:sticky lg:top-14 z-20 border-t border-b border-[#E8EAED]">{{ i18n.t('showcase.colActivity') }}</th>
+                    <th scope="col" class="py-2.5 px-3 w-[100px] xl:w-[112px] font-medium whitespace-nowrap bg-white lg:sticky lg:top-14 z-20 border-t border-b border-[#E8EAED]">{{ i18n.t('showcase.recRefDate') }}</th>
+                    <th scope="col" class="py-2.5 px-3 w-[112px] xl:w-[124px] font-medium whitespace-nowrap bg-white lg:sticky lg:top-14 z-20 border-t border-b border-[#E8EAED]">{{ i18n.t('showcase.recWhen') }}</th>
+                    <th scope="col" class="py-2.5 px-2 w-[36px] xl:w-[42px] text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-t border-b border-[#E8EAED]" [title]="i18n.t('showcase.colYTitle')">{{ i18n.t('showcase.colY') }}</th>
+                    <th scope="col" class="py-2.5 px-2 w-[36px] xl:w-[42px] text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-t border-b border-[#E8EAED]" [title]="i18n.t('showcase.colMTitle')">{{ i18n.t('showcase.colM') }}</th>
+                    <th scope="col" class="py-2.5 px-2 w-[36px] xl:w-[42px] text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-t border-b border-[#E8EAED]" [title]="i18n.t('showcase.colWTitle')">{{ i18n.t('showcase.colW') }}</th>
+                    <th scope="col" class="py-2.5 px-2 w-[36px] xl:w-[42px] text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-t border-b border-[#E8EAED]" [title]="i18n.t('showcase.colDTitle')">{{ i18n.t('showcase.colD') }}</th>
+                    <th scope="col" class="py-2.5 pl-5 xl:pl-6 min-w-[260px] xl:min-w-[330px] font-medium bg-white lg:sticky lg:top-14 z-20 border-t border-b border-[#E8EAED]">
                       {{ i18n.t('showcase.colMessages') }} <span class="font-normal text-[#80868B]">{{ i18n.t('showcase.colMessagesHint') }}</span>
                     </th>
-                    <th scope="col" class="py-2.5 pl-3 w-11 text-right font-medium">
+                    <th scope="col" class="py-2.5 pl-3 w-10 xl:w-11 text-right font-medium bg-white lg:sticky lg:top-14 z-20 border-t border-b border-[#E8EAED]">
                       <span class="sr-only">{{ i18n.t('showcase.colShare') }}</span>
                     </th>
                   </tr>
                 </thead>
 
-                <tbody class="divide-y divide-[#F1F3F4]">
+                <tbody>
                   @for (row of section.rows; track row.match.id) {
                     <tr class="hover:bg-[#FAFAFA] transition-colors">
                       <!-- Bold Google 4-Color Activity Title -->
-                      <td class="py-3.5 pr-5 align-middle">
+                      <td class="py-3.5 pr-5 align-middle border-b border-[#F1F3F4]">
                         <span [class]="'block text-[16px] font-bold leading-snug break-words ' + row.match.palette.inkClass">
                           {{ row.match.goalTitle }}
                         </span>
                       </td>
 
                       <!-- Data!G:G Reference Date: =IF($C4="", $D4, $C4) -->
-                      <td class="py-3.5 px-3 align-middle text-[15px] text-[#3C4043] tabular-nums whitespace-nowrap">
+                      <td class="py-3.5 px-3 align-middle text-[15px] text-[#3C4043] tabular-nums whitespace-nowrap border-b border-[#F1F3F4]">
                         {{ row.referenceDateIso ? formatDate(row.referenceDateIso) : '—' }}
                       </td>
 
                       <!-- Countdown + Target Date -->
-                      <td class="py-3.5 px-3 align-middle tabular-nums whitespace-nowrap">
+                      <td class="py-3.5 px-3 align-middle tabular-nums whitespace-nowrap border-b border-[#F1F3F4]">
                         <div class="text-[15px] font-semibold text-[#202124]">
                           {{ countdownLabel(row.match) }}
                         </div>
@@ -109,21 +109,21 @@ interface ShowcaseCompartment {
                       </td>
 
                       <!-- 4 Separate Pure Numeric A / M / S / G Columns (zero y/m/w/d letters) -->
-                      <td class="py-3.5 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums">
+                      <td class="py-3.5 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums border-b border-[#F1F3F4]">
                         {{ row.years !== null ? row.years : '—' }}
                       </td>
-                      <td class="py-3.5 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums">
+                      <td class="py-3.5 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums border-b border-[#F1F3F4]">
                         {{ row.months !== null ? row.months : '—' }}
                       </td>
-                      <td class="py-3.5 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums">
+                      <td class="py-3.5 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums border-b border-[#F1F3F4]">
                         {{ row.weeks !== null ? row.weeks : '—' }}
                       </td>
-                      <td class="py-3.5 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums">
+                      <td class="py-3.5 px-2 text-right align-middle text-[15px] text-[#3C4043] tabular-nums border-b border-[#F1F3F4]">
                         {{ row.days !== null ? row.days : '—' }}
                       </td>
 
                       <!-- Dual Copyable Share Messages -->
-                      <td class="py-3 pl-6 align-middle">
+                      <td class="py-3 pl-5 xl:pl-6 align-middle border-b border-[#F1F3F4]">
                         <div class="flex flex-col gap-1">
                           <button
                             type="button"
@@ -178,7 +178,7 @@ interface ShowcaseCompartment {
                       </td>
 
                       <!-- Social Card Share Trigger -->
-                      <td class="py-3 pl-3 text-right align-middle">
+                      <td class="py-3 pl-3 text-right align-middle border-b border-[#F1F3F4]">
                         <button
                           type="button"
                           (click)="store.openSocialShareById(row.match.goalId)"

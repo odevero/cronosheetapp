@@ -334,22 +334,14 @@ export const IT_MESSAGES = {
   'security.consoleNoteTitle': 'Nota per la pubblicazione su GitHub & Firebase Console',
   'security.consoleNoteBody':
     'L’accesso con Google Sign-In è già attivo e pronto all’uso. Per la registrazione con Email e Password assicurati che il provider Email/Password sia abilitato in Firebase Console → Authentication → Sign-in method.',
-  'encryption.title': 'Crittografia Dati (AES-256-GCM Standard)',
+  'encryption.title': 'Crittografia Dati (AES-256-GCM attiva di default)',
   'encryption.subtitle':
-    'Attiva la cifratura applicativa AES-256-GCM su titoli attività, note, memo e voci NEXT: nel database cloud i tuoi testi vengono salvati cifrati e illeggibili dall’esterno, mantenendo un utilizzo immediato su tutti i tuoi dispositivi.',
-  'encryption.statusActive': 'Crittografia AES-256-GCM attiva — I tuoi dati sono cifrati nel database',
-  'encryption.statusInactive': 'Modalità standard (non cifrata) — Puoi attivare la protezione in qualsiasi momento',
+    'Tutti i tuoi testi sensibili sono protetti automaticamente con crittografia applicativa AES-256-GCM tramite una chiave dedicata al tuo account: nel database cloud i dati vengono salvati cifrati e illeggibili dall’esterno, mantenendo un utilizzo immediato su tutti i tuoi dispositivi.',
+  'encryption.statusActive': 'Protezione AES-256-GCM attiva di default sul tuo account',
   'encryption.scopeNote':
-    'Campi cifrati: Titoli attività, Note, Memo e voci NEXT. Le date restano in formato calendario per mantenere rapidi ordinamenti e ricorrenze.',
-  'encryption.quotaLabel': 'Cambi di modalità questo mese ({{month}}): {{used}} / {{limit}}',
-  'encryption.quotaExhausted':
-    'Hai raggiunto il limite mensile di {{limit}} cambi modalità per evitare riscritture eccessive del database. Potrai cambiare nuovamente dal mese prossimo.',
-  'encryption.enableBtn': 'Attiva crittografia AES-256',
-  'encryption.disableBtn': 'Disattiva crittografia',
-  'encryption.busyEnable': 'Cifratura dei dati in corso…',
-  'encryption.busyDisable': 'Decifratura dei dati in corso…',
+    'Campi cifrati automaticamente: Titoli attività, Note, Memo e voci NEXT. Le date restano in formato calendario per mantenere rapidi ordinamenti e ricorrenze.',
   'encryption.tierNote':
-    'Standard di settore: crittografia gestita AES-256-GCM senza rischi di perdere l’accesso ai dati. Una futura modalità avanzata Zero-Knowledge con chiave di recupero personale potrà essere aggiunta in una fase successiva.',
+    'Standard di settore: crittografia gestita AES-256-GCM sempre attiva senza rischi di perdere l’accesso ai dati. Una futura modalità avanzata Zero-Knowledge con chiave di recupero personale potrà essere aggiunta in una fase successiva.',
 } as const;
 
 export type TranslationKey = keyof typeof IT_MESSAGES;

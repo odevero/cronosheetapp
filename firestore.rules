@@ -88,21 +88,17 @@ service cloud.firestore {
 
     function isValidEncryptionSecurity(data, userId) {
       return data.keys().hasAll([
-          'ownerId', 'enabled', 'algorithm', 'keyMaterial',
-          'switchesMonth', 'switchesThisMonth', 'updatedAt'
+          'ownerId', 'enabled', 'algorithm', 'keyMaterial', 'updatedAt'
         ])
         && data.keys().hasOnly([
-          'ownerId', 'enabled', 'algorithm', 'keyMaterial',
-          'switchesMonth', 'switchesThisMonth', 'enabledAt', 'updatedAt'
+          'ownerId', 'enabled', 'algorithm', 'keyMaterial', 'enabledAt', 'updatedAt'
         ])
         && isValidId(data.ownerId)
         && data.ownerId == userId
         && data.ownerId == request.auth.uid
-        && data.enabled is bool
+        && data.enabled == true
         && data.algorithm is string && data.algorithm == 'AES-256-GCM'
-        && data.keyMaterial is string && data.keyMaterial.size() <= 128
-        && data.switchesMonth is string && data.switchesMonth.size() == 7 && data.switchesMonth.matches('^[0-9]{4}-[0-9]{2}$')
-        && data.switchesThisMonth is int && data.switchesThisMonth >= 0 && data.switchesThisMonth <= 2
+        && data.keyMaterial is string && data.keyMaterial.size() >= 32 && data.keyMaterial.size() <= 128
         && (!('enabledAt' in data) || data.enabledAt is timestamp)
         && data.updatedAt is timestamp;
     }
@@ -218,13 +214,9 @@ service cloud.firestore {
               securityDocId == 'encryption'
               && isValidEncryptionSecurity(incoming(), userId)
               && incoming().diff(existing()).affectedKeys().hasOnly([
-                'enabled', 'algorithm', 'keyMaterial',
-                'switchesMonth', 'switchesThisMonth', 'enabledAt', 'updatedAt'
+                'enabled', 'algorithm', 'keyMaterial', 'enabledAt', 'updatedAt',
+                'switchesMonth', 'switchesThisMonth'
               ])
-              && (
-                (incoming().switchesMonth == existing().switchesMonth && incoming().switchesThisMonth >= existing().switchesThisMonth) ||
-                (incoming().switchesMonth > existing().switchesMonth)
-              )
             )
           );
 

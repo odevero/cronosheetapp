@@ -337,10 +337,30 @@ export class LocalDemoStore {
   };
 
   resetToSeed(): void {
+    void this.resetToSeedAsync();
+  }
+
+  private async resetToSeedAsync(): Promise<void> {
     const seed = buildSeedDataset(this.ownerId, getTodayIsoLocal());
-    this.goals = seed.goals;
-    this.tips = seed.tips;
-    this.roadmap = seed.roadmap;
+    this.goals = await Promise.all(
+      seed.goals.map(async (g) => ({
+        ...g,
+        title: await encryptTextField(g.title, this.cryptoKey),
+        notes: await encryptTextField(g.notes, this.cryptoKey),
+      })),
+    );
+    this.tips = await Promise.all(
+      seed.tips.map(async (t) => ({
+        ...t,
+        nextStep: await encryptTextField(t.nextStep, this.cryptoKey),
+      })),
+    );
+    this.roadmap = await Promise.all(
+      seed.roadmap.map(async (r) => ({
+        ...r,
+        text: await encryptTextField(r.text, this.cryptoKey),
+      })),
+    );
     writeJson(STORAGE_KEYS.goals, this.goals);
     writeJson(STORAGE_KEYS.tips, this.tips);
     writeJson(STORAGE_KEYS.roadmap, this.roadmap);

@@ -335,20 +335,12 @@ export const EN_MESSAGES: TranslationDictionary = {
   'security.consoleNoteTitle': 'Note for GitHub & Firebase Console publishing',
   'security.consoleNoteBody':
     'Google Sign-In is ready to use. For Email & Password sign-up, ensure the Email/Password provider is enabled in Firebase Console → Authentication → Sign-in method.',
-  'encryption.title': 'Data Encryption (Standard AES-256-GCM)',
+  'encryption.title': 'Data Encryption (AES-256-GCM on by default)',
   'encryption.subtitle':
-    'Opt in to application-layer AES-256-GCM encryption for activity titles, notes, memos, and NEXT items: your text is stored encrypted and unreadable in the cloud database while staying seamless across all your devices.',
-  'encryption.statusActive': 'AES-256-GCM encryption active — Your data is encrypted in the database',
-  'encryption.statusInactive': 'Standard mode (unencrypted) — You can opt in at any time',
+    'All sensitive text is automatically protected with application-layer AES-256-GCM encryption using a dedicated per-account key: your text is stored encrypted and unreadable in the cloud database while staying seamless across all your devices.',
+  'encryption.statusActive': 'AES-256-GCM protection is active by default on your account',
   'encryption.scopeNote':
-    'Encrypted fields: Activity titles, Notes, Memos, and NEXT items. Calendar dates remain structured for instant sorting and recurrence scanning.',
-  'encryption.quotaLabel': 'Mode switches this month ({{month}}): {{used}} / {{limit}}',
-  'encryption.quotaExhausted':
-    'You have reached the monthly limit of {{limit}} mode switches to prevent excessive database rewrites. You can switch again next month.',
-  'encryption.enableBtn': 'Enable AES-256 encryption',
-  'encryption.disableBtn': 'Disable encryption',
-  'encryption.busyEnable': 'Encrypting your data…',
-  'encryption.busyDisable': 'Decrypting your data…',
+    'Automatically encrypted fields: Activity titles, Notes, Memos, and NEXT items. Calendar dates remain structured for instant sorting and recurrence scanning.',
   'encryption.tierNote':
-    'Industry standard: managed AES-256-GCM encryption with zero risk of permanent lockout. An optional advanced Zero-Knowledge tier with a personal recovery key may be offered in a future release.',
+    'Industry standard: always-on managed AES-256-GCM encryption with zero risk of permanent lockout. An optional advanced Zero-Knowledge tier with a personal recovery key may be offered in a future release.',
 };

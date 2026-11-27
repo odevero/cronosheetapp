@@ -336,20 +336,12 @@ export const ES_MESSAGES: TranslationDictionary = {
   'security.consoleNoteTitle': 'Nota para publicación en GitHub y Firebase Console',
   'security.consoleNoteBody':
     'El acceso con Google Sign-In está listo para usar. Para el registro con Correo y Contraseña asegúrate de habilitar el proveedor Email/Password en Firebase Console → Authentication → Sign-in method.',
-  'encryption.title': 'Cifrado de Datos (AES-256-GCM Estándar)',
+  'encryption.title': 'Cifrado de Datos (AES-256-GCM activo por defecto)',
   'encryption.subtitle':
-    'Activa el cifrado de aplicación AES-256-GCM en títulos de actividades, notas, memos y elementos NEXT: tus textos se almacenan cifrados e ilegibles en la base de datos en la nube, manteniendo un uso fluido en todos tus dispositivos.',
-  'encryption.statusActive': 'Cifrado AES-256-GCM activo — Tus datos están cifrados en la base de datos',
-  'encryption.statusInactive': 'Modo estándar (sin cifrar) — Puedes activarlo cuando quieras',
+    'Todos tus textos sensibles están protegidos automáticamente con cifrado de aplicación AES-256-GCM mediante una clave dedicada a tu cuenta: en la base de datos en la nube tus textos se guardan cifrados e ilegibles desde fuera, manteniendo un uso fluido en todos tus dispositivos.',
+  'encryption.statusActive': 'Protección AES-256-GCM activa por defecto en tu cuenta',
   'encryption.scopeNote':
-    'Campos cifrados: Títulos de actividades, Notas, Memos y elementos NEXT. Las fechas se mantienen estructuradas para ordenar y detectar recurrencias al instante.',
-  'encryption.quotaLabel': 'Cambios de modo este mes ({{month}}): {{used}} / {{limit}}',
-  'encryption.quotaExhausted':
-    'Has alcanzado el límite mensual de {{limit}} cambios de modo para evitar reescrituras excesivas de la base de datos. Podrás cambiar de nuevo el próximo mes.',
-  'encryption.enableBtn': 'Activar cifrado AES-256',
-  'encryption.disableBtn': 'Desactivar cifrado',
-  'encryption.busyEnable': 'Cifrando tus datos…',
-  'encryption.busyDisable': 'Descifrando tus datos…',
+    'Campos cifrados automáticamente: Títulos de actividades, Notas, Memos y elementos NEXT. Las fechas se mantienen estructuradas para ordenar y detectar recurrencias al instante.',
   'encryption.tierNote':
-    'Estándar de la industria: cifrado gestionado AES-256-GCM sin riesgo de pérdida permanente de acceso. Una futura modalidad avanzada Zero-Knowledge con clave de recuperación personal podrá añadirse más adelante.',
+    'Estándar de la industria: cifrado gestionado AES-256-GCM siempre activo sin riesgo de pérdida permanente de acceso. Una futura modalidad avanzada Zero-Knowledge con clave de recuperación personal podrá añadirse más adelante.',
 };

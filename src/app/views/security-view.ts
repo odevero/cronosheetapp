@@ -107,117 +107,34 @@ import { I18nService } from '../services/i18n';
         </div>
       </section>
 
-      <!-- Standard AES-256-GCM Data Encryption (Opt-in, max 2 switches/month) -->
+      <!-- Always-On Standard AES-256-GCM Data Encryption -->
       <section
         class="bg-white border border-[#DADCE0] rounded-xl p-6 space-y-4"
         data-testid="encryption-section"
       >
         <div class="space-y-1">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="font-display text-lg font-bold text-[#202124]">
-              {{ i18n.t('encryption.title') }}
-            </h2>
-            <span
-              class="text-xs font-mono text-[#5F6368] tabular-nums"
-              data-testid="encryption-quota"
-            >
-              {{
-                i18n.t('encryption.quotaLabel', {
-                  month: store.encryptionQuota().month,
-                  used: store.encryptionQuota().used,
-                  limit: store.encryptionQuota().limit,
-                })
-              }}
-            </span>
-          </div>
+          <h2 class="font-display text-lg font-bold text-[#202124]">
+            {{ i18n.t('encryption.title') }}
+          </h2>
           <p class="text-sm text-[#5F6368] leading-relaxed">
             {{ i18n.t('encryption.subtitle') }}
           </p>
         </div>
 
-        <div
-          class="p-4 rounded-lg border flex flex-wrap items-center justify-between gap-4"
-          [class]="
-            store.encryptionEnabled()
-              ? 'bg-[#E6F4EA] border-[#A8DAB5]'
-              : 'bg-[#F8F9FA] border-[#E8EAED]'
-          "
-        >
-          <div class="flex items-start gap-3 min-w-0 flex-1">
-            <mat-icon
-              class="mt-0.5 shrink-0"
-              [class]="store.encryptionEnabled() ? 'text-[#137333]' : 'text-[#5F6368]'"
+        <div class="p-4 rounded-lg border bg-[#E6F4EA] border-[#A8DAB5] flex items-start gap-3">
+          <mat-icon class="mt-0.5 shrink-0 text-[#137333]">enhanced_encryption</mat-icon>
+          <div class="space-y-1">
+            <p
+              class="text-sm font-semibold text-[#137333]"
+              data-testid="encryption-status-label"
             >
-              {{ store.encryptionEnabled() ? 'enhanced_encryption' : 'no_encryption_gmailerrorred' }}
-            </mat-icon>
-            <div class="space-y-1">
-              <p
-                class="text-sm font-semibold"
-                [class]="store.encryptionEnabled() ? 'text-[#137333]' : 'text-[#202124]'"
-                data-testid="encryption-status-label"
-              >
-                {{
-                  store.encryptionEnabled()
-                    ? i18n.t('encryption.statusActive')
-                    : i18n.t('encryption.statusInactive')
-                }}
-              </p>
-              <p class="text-xs text-[#5F6368] leading-relaxed">
-                {{ i18n.t('encryption.scopeNote') }}
-              </p>
-            </div>
+              {{ i18n.t('encryption.statusActive') }}
+            </p>
+            <p class="text-xs text-[#3C4043] leading-relaxed">
+              {{ i18n.t('encryption.scopeNote') }}
+            </p>
           </div>
-
-          <button
-            type="button"
-            (click)="toggleEncryption()"
-            [disabled]="store.encryptionBusy() || !store.encryptionQuota().canSwitch"
-            data-testid="encryption-toggle-btn"
-            [class]="
-              store.encryptionEnabled()
-                ? 'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-[#DADCE0] hover:bg-[#F8F9FA] text-sm font-medium text-[#202124] transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-                : 'inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1A73E8] hover:bg-[#1557B0] text-white text-sm font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-            "
-          >
-            @if (store.encryptionBusy()) {
-              <mat-icon class="!text-[18px] !w-[18px] !h-[18px] animate-spin">progress_activity</mat-icon>
-              <span>
-                {{
-                  store.encryptionEnabled()
-                    ? i18n.t('encryption.busyDisable')
-                    : i18n.t('encryption.busyEnable')
-                }}
-              </span>
-            } @else {
-              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">
-                {{ store.encryptionEnabled() ? 'lock_open' : 'lock' }}
-              </mat-icon>
-              <span>
-                {{
-                  store.encryptionEnabled()
-                    ? i18n.t('encryption.disableBtn')
-                    : i18n.t('encryption.enableBtn')
-                }}
-              </span>
-            }
-          </button>
         </div>
-
-        @if (!store.encryptionQuota().canSwitch) {
-          <p
-            role="status"
-            data-testid="encryption-quota-exhausted"
-            class="text-xs text-[#9A5B00] bg-[#FEF7E0] border border-[#FDE293] rounded-lg px-3.5 py-2.5 leading-relaxed"
-          >
-            {{ i18n.t('encryption.quotaExhausted', { limit: store.encryptionQuota().limit }) }}
-          </p>
-        }
-
-        @if (encryptionError()) {
-          <p role="alert" class="text-xs text-[#A50E0E] font-medium">
-            {{ encryptionError() }}
-          </p>
-        }
 
         <p class="text-xs text-[#5F6368] leading-relaxed pt-1 border-t border-[#F1F3F4]">
           {{ i18n.t('encryption.tierNote') }}
@@ -400,7 +317,6 @@ export class SecurityView {
   protected readonly enrollError = signal<string | null>(null);
   protected readonly nameSaving = signal<boolean>(false);
   protected readonly nameError = signal<string | null>(null);
-  protected readonly encryptionError = signal<string | null>(null);
 
   protected readonly nameForm = new FormGroup({
     displayName: new FormControl(
@@ -418,15 +334,6 @@ export class SecurityView {
       validators: [Validators.required, Validators.pattern(/^\d{6}$/)],
     }),
   });
-
-  protected async toggleEncryption(): Promise<void> {
-    this.encryptionError.set(null);
-    const nextEnabled = !this.store.encryptionEnabled();
-    const res = await this.store.setDataEncryptionEnabled(nextEnabled);
-    if (!res.ok && res.error) {
-      this.encryptionError.set(res.error);
-    }
-  }
 
   protected async saveDisplayName(): Promise<void> {
     if (this.nameForm.invalid || this.nameSaving()) return;

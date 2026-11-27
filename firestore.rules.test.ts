@@ -49,7 +49,8 @@ test('firestore.rules protects all blueprint collections including security/encr
   }
   assert.match(rules, /match \/security\/\{securityDocId\}/);
   assert.match(rules, /securityDocId == 'encryption'/);
-  assert.match(rules, /data\.switchesThisMonth <= 2/);
+  assert.match(rules, /data\.enabled == true/);
+  assert.match(rules, /data\.keyMaterial\.size\(\) >= 32/);
   assert.match(rules, /data\.algorithm == 'AES-256-GCM'/);
   assert.match(rules, /allow list: if false;/);
   assert.match(rules, /incoming\(\)\.createdAt == request\.time/);
