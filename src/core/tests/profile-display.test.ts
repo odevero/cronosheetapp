@@ -9,7 +9,7 @@ import {
 } from '../domain/services/profile-display';
 
 test('formatShowcaseBrandTitle personalizes heading for real names and falls back cleanly', () => {
-  assert.equal(formatShowcaseBrandTitle('Orso', 'orsodxwxro@gmail.com'), 'CronoSheet di Orso');
+  assert.equal(formatShowcaseBrandTitle('Orso', 'orso.demo@example.com'), 'CronoSheet di Orso');
   assert.equal(
     formatShowcaseBrandTitle('  Marco Rossi  ', 'marco@example.com'),
     'CronoSheet di Marco Rossi',
@@ -17,7 +17,7 @@ test('formatShowcaseBrandTitle personalizes heading for real names and falls bac
   assert.equal(formatShowcaseBrandTitle('Utente', 'user@example.com'), 'CronoSheet');
   assert.equal(formatShowcaseBrandTitle('Workspace Demo', 'demo@cronosheet.local'), 'CronoSheet');
   assert.equal(
-    formatShowcaseBrandTitle('orso.dxwxro+cronosheetapp3', 'orso.dxwxro+cronosheetapp3@gmail.com'),
+    formatShowcaseBrandTitle('user.alias+cronosheetapp3', 'user.alias+cronosheetapp3@example.com'),
     'CronoSheet',
   );
   assert.equal(formatShowcaseBrandTitle('', 'user@example.com'), 'CronoSheet');
@@ -25,20 +25,20 @@ test('formatShowcaseBrandTitle personalizes heading for real names and falls bac
 
 test('needsNameOnboarding detects missing or email-derived names in Firebase mode only', () => {
   assert.equal(
-    needsNameOnboarding('orso.dxwxro+cronosheetapp3', 'orso.dxwxro+cronosheetapp3@gmail.com', 'firebase'),
+    needsNameOnboarding('user.alias+cronosheetapp3', 'user.alias+cronosheetapp3@example.com', 'firebase'),
     true,
   );
   assert.equal(needsNameOnboarding('Utente', 'test@example.com', 'firebase'), true);
   assert.equal(needsNameOnboarding('', 'test@example.com', 'firebase'), true);
-  assert.equal(needsNameOnboarding('Orso', 'orsodxwxro@gmail.com', 'firebase'), false);
+  assert.equal(needsNameOnboarding('Orso', 'orso.demo@example.com', 'firebase'), false);
   assert.equal(needsNameOnboarding('Workspace Demo', 'demo@cronosheet.local', 'demo'), false);
 });
 
 test('isGenericOrEmailDerivedName and suggestOnboardingName handle full names vs aliases', () => {
-  assert.equal(isGenericOrEmailDerivedName('Orso De Vero', 'orsodxwxro@gmail.com'), false);
-  assert.equal(suggestOnboardingName('Orso De Vero', 'orsodxwxro@gmail.com'), 'Orso');
+  assert.equal(isGenericOrEmailDerivedName('Mario Rossi', 'mario.rossi@example.com'), false);
+  assert.equal(suggestOnboardingName('Mario Rossi', 'mario.rossi@example.com'), 'Mario');
   assert.equal(
-    suggestOnboardingName('orso.dxwxro+test', 'orso.dxwxro+test@gmail.com'),
+    suggestOnboardingName('user.alias+test', 'user.alias+test@example.com'),
     '',
   );
 });
