@@ -6,6 +6,8 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
+import bundledFirebaseConfig from '../firebase-applet-config.json';
+import {resolveFirebasePublicConfig} from './core/adapters/firebase/firebase-config';
 import {
   createSlidingWindowRateLimiter,
   formatFeedbackAsGitHubIssue,
@@ -34,6 +36,20 @@ function extractClientIp(req: express.Request): string {
   }
   return req.ip || req.socket.remoteAddress || 'unknown';
 }
+
+/**
+ * Exposes strictly the public Firebase Web App client config resolved from
+ * environment variables (FIREBASE_* or Firebase App Hosting FIREBASE_WEBAPP_CONFIG)
+ * with firebase-applet-config.json as fallback. Never returns server secrets.
+ */
+app.get('/api/public-config', (_req, res) => {
+  const resolved = resolveFirebasePublicConfig(process.env, bundledFirebaseConfig);
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(200).json({
+    firebase: resolved.config,
+    source: resolved.source,
+  });
+});
 
 /**
  * Hardened Feedback -> GitHub Issues proxy route.
